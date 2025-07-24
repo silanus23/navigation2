@@ -24,43 +24,28 @@
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "nav2_msgs/msg/waypoint_status.hpp"
 #include "nav2_util/geometry_utils.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
 namespace nav2_util
 {
 
-/**
- * @brief Result of searching for the closest segment on a path.
- */
 struct PathSearchResult
 {
   double distance;
   size_t closest_segment_index;
 };
-/**
- * @brief Finds the minimum distance from a robot pose to a path segment.
- *Especially considering we need to explain to users that if start index
- * window length are not specified, it finds the global nearest path point.
- * Else, specify the index to start from during an existing path tracking task and max
- * window length to search for (which can be computed based on
- * robot's max velocity and the frequency of the server calling this function).
- * If calling the function without a fixed iteration rate,
- * consider using the global search as long as you don't expect loops in
- * the path generated from things like navigate through poses.
- * This function searches for the closest segment on the given path to the robot's pose,
- * starting from a specified index and optionally limiting the search to a window length.
- * It returns the minimum distance found and the index of the closest segment.
- *
- * @param path The path to search (sequence of poses).
- * @param robot_pose The robot's current pose in pose form.
- * @param start_index The index in the path to start searching from.
- * @param search_window_length The maximum length (in meters) to search along the path.
- * @return PathSearchResult Struct containing the minimum distance and the index of the closest segment.
- */
-PathSearchResult distance_from_path(
+
+PathSearchResult distanceFromPath(
   const nav_msgs::msg::Path & path,
-  const geometry_msgs::msg::Pose & robot_pose,
-  const size_t start_index = 0,
-  const double search_window_length = std::numeric_limits<double>::max());
+  const geometry_msgs::msg::PoseStamped & robot_pose);
+
+PathSearchResult distanceFromPath(
+  const nav_msgs::msg::Path & path,
+  const geometry_msgs::msg::PoseStamped & robot_pose,
+  const size_t start_index,
+  const double search_window_length);
 
 }  // namespace nav2_util
 
