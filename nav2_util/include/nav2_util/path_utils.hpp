@@ -24,37 +24,28 @@
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "nav2_msgs/msg/waypoint_status.hpp"
 #include "nav2_util/geometry_utils.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
 namespace nav2_util
 {
 
-/**
- * @brief Result of searching for the closest segment on a path.
- */
 struct PathSearchResult
 {
   double distance;
   size_t closest_segment_index;
 };
-/**
- * @brief Finds the minimum distance from the robot's pose to the closest segment of a path.
- *
- * This function searches for the closest segment on the given path to the robot's pose.
- * By default, it finds the globally nearest path point. Optionally, you can specify
- * the index to start searching from (useful for path tracking tasks) and a maximum
- * search window length (in meters) to limit the search range.
- *
- * @param path The path to search (sequence of poses).
- * @param robot_pose The robot's current pose.
- * @param start_index The index in the path to start searching from (default: 0).
- * @param search_window_length The maximum length (in meters) to search along the path (default: unlimited).
- * @return PathSearchResult Struct containing the minimum distance and the index of the closest segment.
- */
-PathSearchResult distance_from_path(
+
+PathSearchResult distanceFromPath(
   const nav_msgs::msg::Path & path,
-  const geometry_msgs::msg::Pose & robot_pose,
-  const size_t start_index = 0,
-  const double search_window_length = std::numeric_limits<double>::max());
+  const geometry_msgs::msg::PoseStamped & robot_pose);
+
+PathSearchResult distanceFromPath(
+  const nav_msgs::msg::Path & path,
+  const geometry_msgs::msg::PoseStamped & robot_pose,
+  const size_t start_index,
+  const double search_window_length);
 
 }  // namespace nav2_util
 
