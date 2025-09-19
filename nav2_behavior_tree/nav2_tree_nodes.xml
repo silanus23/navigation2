@@ -424,6 +424,9 @@
       <input_port name="error_codes_to_check">Error codes to check, user defined</input_port>
     </Condition>
 
+    <Condition ID="IswithinPathTrackingBounds">
+      <input_port name="max_tracking_error">Max tracking error</input_port>
+    </Condition>
     <Condition ID="ArePosesNear">
       <input_port name="ref_pose">Destination</input_port>
       <input_port name="target_pose">Destination</input_port>
