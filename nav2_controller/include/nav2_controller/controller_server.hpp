@@ -273,7 +273,6 @@ protected:
   double search_window_;
   size_t start_index_;
 
-  double current_distance_to_goal_;
   double failure_tolerance_;
   bool use_realtime_priority_;
   bool publish_zero_velocity_;
@@ -289,9 +288,6 @@ protected:
 
   // Current path container
   nav_msgs::msg::Path current_path_;
-
-  // Last tracking error in the form of TrackingError.msg
-  nav2_msgs::msg::TrackingErrorFeedback  current_tracking_error_;
 
 private:
   /**
