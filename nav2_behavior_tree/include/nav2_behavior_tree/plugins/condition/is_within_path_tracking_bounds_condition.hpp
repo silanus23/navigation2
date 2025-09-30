@@ -20,7 +20,7 @@
 #include <mutex>
 #include "behaviortree_cpp/condition_node.h"
 #include "nav2_ros_common/lifecycle_node.hpp"
-#include "nav2_msgs/msg/tracking_error.hpp"
+#include "nav2_msgs/msg/tracking_error_feedback.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "nav2_ros_common/lifecycle_node.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
@@ -61,12 +61,12 @@ private:
   nav2::LifecycleNode::SharedPtr node_;
   rclcpp::CallbackGroup::SharedPtr callback_group_;
   rclcpp::executors::SingleThreadedExecutor callback_group_executor_;
-  rclcpp::Subscription<nav2_msgs::msg::TrackingError>::SharedPtr tracking_error_sub_;
+  rclcpp::Subscription<nav2_msgs::msg::TrackingErrorFeedback>::SharedPtr tracking_error_sub_;
   double last_error_{0.0};
-  double max_error{1.5};
+  double max_error_{1.5};
   std::chrono::milliseconds bt_loop_duration_;
 
-  void trackingErrorCallback(const nav2_msgs::msg::TrackingError::SharedPtr msg);
+  void trackingErrorCallback(const nav2_msgs::msg::TrackingErrorFeedback::SharedPtr msg);
 };
 
 }  // namespace nav2_behavior_tree

@@ -29,9 +29,10 @@ IsWithinPathTrackingBoundsCondition::IsWithinPathTrackingBoundsCondition(
     false);
   callback_group_executor_.add_callback_group(callback_group_, node_->get_node_base_interface());
 
-  tracking_error_sub_ = node_->create_subscription<nav2_msgs::msg::TrackingError>(
+  tracking_error_sub_ = node_->create_subscription<nav2_msgs::msg::TrackingErrorFeedback>(
     "/tracking_error",
-    std::bind(&IsWithinPathTrackingBoundsCondition::trackingErrorCallback, this, std::placeholders::_1),
+    std::bind(&IsWithinPathTrackingBoundsCondition::trackingErrorCallback, this,
+      std::placeholders::_1),
     rclcpp::SystemDefaultsQoS(),
     callback_group_);
 
@@ -40,24 +41,29 @@ IsWithinPathTrackingBoundsCondition::IsWithinPathTrackingBoundsCondition(
 
   RCLCPP_DEBUG(node_->get_logger(), "Initialized IsWithinPathTrackingBoundsCondition BT node");
   RCLCPP_INFO_ONCE(node_->get_logger(), "Waiting for tracking error");
+  initialize();
 }
 
 void IsWithinPathTrackingBoundsCondition::trackingErrorCallback(
-  const nav2_msgs::msg::TrackingError::SharedPtr msg)
+  const nav2_msgs::msg::TrackingErrorFeedback::SharedPtr msg)
 {
   last_error_ = msg->tracking_error;
 }
 
 void IsWithinPathTrackingBoundsCondition::initialize()
 {
-  getInput("max_error", max_error);
+  getInput("max_error", max_error_);
 }
 
 BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
 {
+  if (!BT::isStatusActive(status())) {
+    initialize();
+  }
+
   callback_group_executor_.spin_all(bt_loop_duration_);
 
-  if (last_error_ <= max_error) {
+  if (last_error_ <= max_error_) {
     return BT::NodeStatus::SUCCESS;
   }
   return BT::NodeStatus::FAILURE;
@@ -65,5 +71,9 @@ BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
 
 }  // namespace nav2_behavior_tree
 
-#include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(nav2_behavior_tree::IsWithinPathTrackingBoundsCondition, BT::ConditionNode)
+#include "behaviortree_cpp/bt_factory.h"
+BT_REGISTER_NODES(factory)
+{
+  factory.registerNodeType<nav2_behavior_tree::IsWithinPathTrackingBoundsCondition>
+    ("IsWithinPathTrackingBounds>");
+}
