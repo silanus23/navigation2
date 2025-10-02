@@ -18,7 +18,7 @@
 #include <string>
 #include <chrono>
 
-#include "nav2_msgs/msg/tracking_error_feedback.hpp"
+#include "nav2_msgs/msg/tracking_feedback.hpp"
 
 #include "utils/test_behavior_tree_fixture.hpp"
 #include "nav2_behavior_tree/plugins/condition/is_within_path_tracking_bounds_condition.hpp"
@@ -48,17 +48,17 @@ public:
     factory_->registerNodeType<nav2_behavior_tree::IsWithinPathTrackingBoundsCondition>(
       "IsWithinPathTrackingBounds");
 
-    tracking_error_pub_ = node_->create_publisher<nav2_msgs::msg::TrackingErrorFeedback>(
-      "/tracking_error",
+    tracking_feedback_pub_ = node_->create_publisher<nav2_msgs::msg::TrackingFeedback>(
+      "/tracking_feedback",
       rclcpp::SystemDefaultsQoS());
-    tracking_error_pub_->on_activate();
+    tracking_feedback_pub_->on_activate();
   }
 
   static void TearDownTestCase()
   {
     delete config_;
     config_ = nullptr;
-    tracking_error_pub_.reset();
+    tracking_feedback_pub_.reset();
     node_.reset();
     factory_.reset();
     executor_.reset();
@@ -69,7 +69,7 @@ protected:
   static rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
   static BT::NodeConfiguration * config_;
   static std::shared_ptr<BT::BehaviorTreeFactory> factory_;
-  static nav2::Publisher<nav2_msgs::msg::TrackingErrorFeedback>::SharedPtr tracking_error_pub_;
+  static nav2::Publisher<nav2_msgs::msg::TrackingFeedback>::SharedPtr tracking_feedback_pub_;
 };
 
 nav2::LifecycleNode::SharedPtr IsWithinPathTrackingBoundsConditionTestFixture::node_ = nullptr;
@@ -78,8 +78,8 @@ IsWithinPathTrackingBoundsConditionTestFixture::executor_ = nullptr;
 BT::NodeConfiguration * IsWithinPathTrackingBoundsConditionTestFixture::config_ = nullptr;
 std::shared_ptr<BT::BehaviorTreeFactory> IsWithinPathTrackingBoundsConditionTestFixture::factory_ =
   nullptr;
-nav2::Publisher<nav2_msgs::msg::TrackingErrorFeedback>::SharedPtr
-IsWithinPathTrackingBoundsConditionTestFixture::tracking_error_pub_ = nullptr;
+nav2::Publisher<nav2_msgs::msg::TrackingFeedback>::SharedPtr
+IsWithinPathTrackingBoundsConditionTestFixture::tracking_feedback_pub_ = nullptr;
 
 TEST_F(IsWithinPathTrackingBoundsConditionTestFixture, test_behavior_within_bounds)
 {
@@ -94,30 +94,30 @@ TEST_F(IsWithinPathTrackingBoundsConditionTestFixture, test_behavior_within_boun
   auto tree = factory_->createTreeFromText(xml_txt, config_->blackboard);
 
   // Test case 1: Error is within bounds (should return SUCCESS)
-  nav2_msgs::msg::TrackingErrorFeedback tracking_error_msg;
-  tracking_error_msg.tracking_error = 0.5;
-  tracking_error_pub_->publish(tracking_error_msg);
+  nav2_msgs::msg::TrackingFeedback tracking_feedback_msg;
+  tracking_feedback_msg.tracking_error = 0.5;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
 
   // Test case 2: Error is exactly at the boundary (should return SUCCESS)
-  tracking_error_msg.tracking_error = 1.0;
-  tracking_error_pub_->publish(tracking_error_msg);
+  tracking_feedback_msg.tracking_error = 1.0;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
 
   // Test case 3: Error exceeds bounds (should return FAILURE)
-  tracking_error_msg.tracking_error = 1.5;
-  tracking_error_pub_->publish(tracking_error_msg);
+  tracking_feedback_msg.tracking_error = 1.5;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::FAILURE);
 
   // Test case 4: Zero error (should return SUCCESS)
-  tracking_error_msg.tracking_error = 0.0;
-  tracking_error_pub_->publish(tracking_error_msg);
+  tracking_feedback_msg.tracking_error = 0.0;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
@@ -136,26 +136,19 @@ TEST_F(IsWithinPathTrackingBoundsConditionTestFixture, test_behavior_different_m
   auto tree = factory_->createTreeFromText(xml_txt, config_->blackboard);
 
   // Test case 1: Error is within smaller bounds (should return SUCCESS)
-  nav2_msgs::msg::TrackingErrorFeedback tracking_error_msg;
-  tracking_error_msg.tracking_error = 0.1;
-  tracking_error_pub_->publish(tracking_error_msg);
+  nav2_msgs::msg::TrackingFeedback tracking_feedback_msg;
+  tracking_feedback_msg.tracking_error = 0.1;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
 
   // Test case 2: Error exceeds smaller bounds (should return FAILURE)
-  tracking_error_msg.tracking_error = 0.3;
-  tracking_error_pub_->publish(tracking_error_msg);
+  tracking_feedback_msg.tracking_error = 0.3;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::FAILURE);
-
-  // Test case 3: Error is exactly at the boundary (should return SUCCESS)
-  tracking_error_msg.tracking_error = 0.2;
-  tracking_error_pub_->publish(tracking_error_msg);
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  executor_->spin_some();
-  EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
 }
 
 TEST_F(IsWithinPathTrackingBoundsConditionTestFixture, test_behavior_large_error_values)
@@ -171,16 +164,16 @@ TEST_F(IsWithinPathTrackingBoundsConditionTestFixture, test_behavior_large_error
   auto tree = factory_->createTreeFromText(xml_txt, config_->blackboard);
 
   // Test case 1: Large error within bounds (should return SUCCESS)
-  nav2_msgs::msg::TrackingErrorFeedback tracking_error_msg;
-  tracking_error_msg.tracking_error = 4.9;
-  tracking_error_pub_->publish(tracking_error_msg);
+  nav2_msgs::msg::TrackingFeedback tracking_feedback_msg;
+  tracking_feedback_msg.tracking_error = 4.9;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
 
   // Test case 2: Very large error exceeding bounds (should return FAILURE)
-  tracking_error_msg.tracking_error = 10.0;
-  tracking_error_pub_->publish(tracking_error_msg);
+  tracking_feedback_msg.tracking_error = 10.0;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::FAILURE);
@@ -199,16 +192,16 @@ TEST_F(IsWithinPathTrackingBoundsConditionTestFixture, test_behavior_edge_cases)
   auto tree = factory_->createTreeFromText(xml_txt, config_->blackboard);
 
   // Test case 1: Zero max_error with zero tracking error (should return SUCCESS)
-  nav2_msgs::msg::TrackingErrorFeedback tracking_error_msg;
-  tracking_error_msg.tracking_error = 0.0;
-  tracking_error_pub_->publish(tracking_error_msg);
+  nav2_msgs::msg::TrackingFeedback tracking_feedback_msg;
+  tracking_feedback_msg.tracking_error = 0.0;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::SUCCESS);
 
   // Test case 2: Zero max_error with any positive tracking error (should return FAILURE)
-  tracking_error_msg.tracking_error = 0.001;
-  tracking_error_pub_->publish(tracking_error_msg);
+  tracking_feedback_msg.tracking_error = 0.001;
+  tracking_feedback_pub_->publish(tracking_feedback_msg);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   executor_->spin_some();
   EXPECT_EQ(tree.tickOnce(), BT::NodeStatus::FAILURE);

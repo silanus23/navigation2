@@ -29,9 +29,9 @@ IsWithinPathTrackingBoundsCondition::IsWithinPathTrackingBoundsCondition(
     false);
   callback_group_executor_.add_callback_group(callback_group_, node_->get_node_base_interface());
 
-  tracking_error_sub_ = node_->create_subscription<nav2_msgs::msg::TrackingErrorFeedback>(
-    "/tracking_error",
-    std::bind(&IsWithinPathTrackingBoundsCondition::trackingErrorCallback, this,
+  tracking_feedback_sub_ = node_->create_subscription<nav2_msgs::msg::TrackingFeedback>(
+    "/tracking_feedback",
+    std::bind(&IsWithinPathTrackingBoundsCondition::trackingFeedbackCallback, this,
       std::placeholders::_1),
     rclcpp::SystemDefaultsQoS(),
     callback_group_);
@@ -44,8 +44,8 @@ IsWithinPathTrackingBoundsCondition::IsWithinPathTrackingBoundsCondition(
   initialize();
 }
 
-void IsWithinPathTrackingBoundsCondition::trackingErrorCallback(
-  const nav2_msgs::msg::TrackingErrorFeedback::SharedPtr msg)
+void IsWithinPathTrackingBoundsCondition::trackingFeedbackCallback(
+  const nav2_msgs::msg::TrackingFeedback::SharedPtr msg)
 {
   last_error_ = msg->tracking_error;
 }
@@ -74,6 +74,6 @@ BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
 #include "behaviortree_cpp/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<nav2_behavior_tree::IsWithinPathTrackingBoundsCondition>
-    ("IsWithinPathTrackingBounds>");
+  factory.registerNodeType<nav2_behavior_tree::IsWithinPathTrackingBoundsCondition>(
+    "IsWithinPathTrackingBounds");
 }

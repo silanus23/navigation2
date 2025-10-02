@@ -18,19 +18,18 @@
 #include <string>
 #include <memory>
 #include <mutex>
+
 #include "behaviortree_cpp/condition_node.h"
 #include "nav2_ros_common/lifecycle_node.hpp"
-#include "nav2_msgs/msg/tracking_error_feedback.hpp"
+#include "nav2_msgs/msg/tracking_feedback.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "nav2_ros_common/lifecycle_node.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
-#include "behaviortree_cpp/condition_node.h"
 
 namespace nav2_behavior_tree
 {
 
 /**
- * @brief A BT::ConditionNode that subscribes to /tracking_error and returns SUCCESS
+ * @brief A BT::ConditionNode that subscribes to /tracking_feedback and returns SUCCESS
  * if the error is within the max_error input port, FAILURE otherwise
  */
 class IsWithinPathTrackingBoundsCondition : public BT::ConditionNode
@@ -61,12 +60,12 @@ private:
   nav2::LifecycleNode::SharedPtr node_;
   rclcpp::CallbackGroup::SharedPtr callback_group_;
   rclcpp::executors::SingleThreadedExecutor callback_group_executor_;
-  rclcpp::Subscription<nav2_msgs::msg::TrackingErrorFeedback>::SharedPtr tracking_error_sub_;
+  rclcpp::Subscription<nav2_msgs::msg::TrackingFeedback>::SharedPtr tracking_feedback_sub_;
   double last_error_{0.0};
   double max_error_{1.5};
   std::chrono::milliseconds bt_loop_duration_;
 
-  void trackingErrorCallback(const nav2_msgs::msg::TrackingErrorFeedback::SharedPtr msg);
+  void trackingFeedbackCallback(const nav2_msgs::msg::TrackingFeedback::SharedPtr msg);
 };
 
 }  // namespace nav2_behavior_tree
