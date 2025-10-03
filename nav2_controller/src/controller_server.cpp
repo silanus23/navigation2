@@ -234,7 +234,6 @@ ControllerServer::on_configure(const rclcpp_lifecycle::State & state)
 
   double costmap_update_timeout_dbl;
   get_parameter("costmap_update_timeout", costmap_update_timeout_dbl);
-  tracking_feedback_pub_ = create_publisher<nav2_msgs::msg::TrackingFeedback>("tracking_feedback");
   costmap_update_timeout_ = rclcpp::Duration::from_seconds(costmap_update_timeout_dbl);
 
   // Create the action server that we implement with our followPath method
@@ -277,7 +276,6 @@ ControllerServer::on_activate(const rclcpp_lifecycle::State & /*state*/)
   tracking_feedback_pub_->on_activate();
   action_server_->activate();
   auto node = shared_from_this();
-  tracking_feedback_pub_->on_activate();
   // Add callback for dynamic parameters
   dyn_params_handler_ = node->add_on_set_parameters_callback(
     std::bind(&ControllerServer::dynamicParametersCallback, this, _1));
