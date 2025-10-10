@@ -17,6 +17,9 @@
     <class type="dwb_critics::PathDistCritic" base_class_type="dwb_core::TrajectoryCritic">
       <description>Scores trajectories based on how far from the global path they end up.</description>
     </class>
+    <class type="dwb_critics::PathHugCritic" base_class_type="dwb_core::TrajectoryCritic">
+      <description>Scores trajectories based on the average scale seperation from global path.</description>
+    </class>
     <class type="dwb_critics::OscillationCritic" base_class_type="dwb_core::TrajectoryCritic">
       <description>Checks to see whether the sign of the commanded velocity flips frequently</description>
     </class>
