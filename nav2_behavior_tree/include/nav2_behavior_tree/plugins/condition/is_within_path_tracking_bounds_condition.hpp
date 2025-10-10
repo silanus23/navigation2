@@ -23,7 +23,6 @@
 #include "nav2_ros_common/lifecycle_node.hpp"
 #include "nav2_msgs/msg/tracking_feedback.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/battery_state.hpp"
 
 namespace nav2_behavior_tree
 {

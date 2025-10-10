@@ -63,6 +63,16 @@ BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
 
   callback_group_executor_.spin_all(bt_loop_duration_);
 
+  if (!getInput("max_error", max_error_)) {
+    RCLCPP_ERROR(node_->get_logger(), "max_error parameter not provided");
+    max_error_ = 1.0;  // Default fallback
+  }
+  
+  if (max_error_ < 0.0) {
+    RCLCPP_WARN(node_->get_logger(), "max_error should be positive, using absolute value");
+    max_error_ = std::abs(max_error_);
+  }
+
   if (last_error_ <= max_error_) {
     return BT::NodeStatus::SUCCESS;
   }
