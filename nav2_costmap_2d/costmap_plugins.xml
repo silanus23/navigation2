@@ -21,6 +21,9 @@
     <class type="nav2_costmap_2d::PluginContainerLayer" base_class_type="nav2_costmap_2d::Layer">
       <description>Plugin to group different layers within the same costmap</description>
     </class>
+   <class type="nav2_costmap_2d::TrackingErrorLayer" base_class_type="nav2_costmap_2d::Layer">
+      <description>Creates an imaginary corridor with obstacles around the path</description>
+    </class>
   </library>
 
   <library path="filters">
