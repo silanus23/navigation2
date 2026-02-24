@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #ifndef NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__IS_WITHIN_PATH_TRACKING_BOUNDS_CONDITION_HPP_
 #define NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__IS_WITHIN_PATH_TRACKING_BOUNDS_CONDITION_HPP_
 
@@ -28,12 +27,12 @@ namespace nav2_behavior_tree
 
 /**
  * @brief A BT::ConditionNode that subscribes to tracking_feedback and returns SUCCESS
- * if the tracking error is within the specified bounds.
+ * if the position and heading tracking errors are within the specified bounds.
  *
- * This node uses two separate input ports, "max_error_left" and "max_error_right",
- * to allow for asymmetric bounds on the allowed tracking error to the left and right
- * of the path, respectively. The node returns SUCCESS if the error is within these
- * bounds, and FAILURE otherwise.
+ * This node uses four separate input ports to allow for asymmetric bounds:
+ * - "max_position_error_left" and "max_position_error_right" for position tracking
+ * - "max_heading_error_left" and "max_heading_error_right" for heading tracking
+ * The node returns SUCCESS if both errors are within their respective bounds, and FAILURE otherwise.
  */
 class IsWithinPathTrackingBoundsCondition : public BT::ConditionNode
 {
@@ -43,6 +42,7 @@ public:
     const BT::NodeConfiguration & conf);
 
   IsWithinPathTrackingBoundsCondition() = delete;
+
   ~IsWithinPathTrackingBoundsCondition() override = default;
 
   /**
@@ -55,8 +55,10 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<double>("max_error_left", "Maximum allowed tracking error left side"),
-      BT::InputPort<double>("max_error_right", "Maximum allowed tracking error on the right side")
+      BT::InputPort<double>("max_position_error_left", "Maximum allowed position tracking error left side"),
+      BT::InputPort<double>("max_position_error_right", "Maximum allowed position tracking error on the right side"),
+      BT::InputPort<double>("max_heading_error_right", "Maximum allowed heading error when robot rotated right"),
+      BT::InputPort<double>("max_heading_error_left", "Maximum allowed heading error when robot rotated left")
     };
   }
 
@@ -73,10 +75,11 @@ protected:
   rclcpp::Logger logger_{rclcpp::get_logger("IsWithinPathTrackingBoundsCondition")};
   nav2::Subscription<nav2_msgs::msg::TrackingFeedback>::SharedPtr tracking_feedback_sub_;
   std::chrono::milliseconds bt_loop_duration_;
-
   bool is_within_bounds_{true};
-  double max_error_right_;
-  double max_error_left_;
+  double max_position_error_right_;
+  double max_position_error_left_;
+  double max_heading_error_right_;
+  double max_heading_error_left_;
 };
 
 }  // namespace nav2_behavior_tree

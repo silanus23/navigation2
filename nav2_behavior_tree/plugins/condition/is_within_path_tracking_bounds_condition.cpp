@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #include "nav2_behavior_tree/plugins/condition/is_within_path_tracking_bounds_condition.hpp"
 
 namespace nav2_behavior_tree
@@ -25,6 +24,7 @@ IsWithinPathTrackingBoundsCondition::IsWithinPathTrackingBoundsCondition(
   auto node = config().blackboard->get<nav2::LifecycleNode::SharedPtr>("node");
   logger_ = node->get_logger();
   clock_ = node->get_clock();
+
   callback_group_ = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive,
     false);
@@ -45,28 +45,53 @@ IsWithinPathTrackingBoundsCondition::IsWithinPathTrackingBoundsCondition(
 
 void IsWithinPathTrackingBoundsCondition::initialize()
 {
-  getInput("max_error_left", max_error_left_);
-  getInput("max_error_right", max_error_right_);
-  if (max_error_right_ < 0.0) {
-    RCLCPP_WARN(logger_, "max_error_right should be positive, using absolute value");
-    max_error_right_ = std::abs(max_error_right_);
+  getInput("max_position_error_left", max_position_error_left_);
+  getInput("max_position_error_right", max_position_error_right_);
+  getInput("max_heading_error_right", max_heading_error_right_);
+  getInput("max_heading_error_left", max_heading_error_left_);
+
+  if (max_position_error_right_ < 0.0) {
+    RCLCPP_WARN(logger_, "max_position_error_right should be positive, using absolute value");
+    max_position_error_right_ = std::abs(max_position_error_right_);
   }
-  if (max_error_left_ < 0.0) {
-    RCLCPP_WARN(logger_, "max_error_left should be positive, using absolute value");
-    max_error_left_ = std::abs(max_error_left_);
+  if (max_position_error_left_ < 0.0) {
+    RCLCPP_WARN(logger_, "max_position_error_left should be positive, using absolute value");
+    max_position_error_left_ = std::abs(max_position_error_left_);
+  }
+  if (max_heading_error_right_ < 0.0) {
+    RCLCPP_WARN(logger_, "max_heading_error_right should be positive, using absolute value");
+    max_heading_error_right_ = std::abs(max_heading_error_right_);
+  }
+  if (max_heading_error_left_ < 0.0) {
+    RCLCPP_WARN(logger_, "max_heading_error_left should be positive, using absolute value");
+    max_heading_error_left_ = std::abs(max_heading_error_left_);
   }
 }
 
 void IsWithinPathTrackingBoundsCondition::trackingFeedbackCallback(
   const nav2_msgs::msg::TrackingFeedback::ConstSharedPtr msg)
 {
-  double tracking_error = msg->tracking_error;
-  // Check if error is within bounds
-  if (tracking_error >= 0.0) {  // Positive or zero = left side (or on path)
-    is_within_bounds_ = (tracking_error <= max_error_left_);
+  double position_error = msg->position_tracking_error;
+  double heading_error = msg->heading_tracking_error;
+
+  // Check position error
+  bool position_within_bounds = false;
+  if (position_error >= 0.0) {  // Positive or zero = left side (or on path)
+    position_within_bounds = (position_error <= max_position_error_left_);
   } else {  // Negative = right side
-    is_within_bounds_ = (std::abs(tracking_error) <= max_error_right_);
+    position_within_bounds = (std::abs(position_error) <= max_position_error_right_);
   }
+
+  // Check heading error
+  bool heading_within_bounds = false;
+  if (heading_error >= 0.0) {  // Positive = robot rotated right of path
+    heading_within_bounds = (heading_error <= max_heading_error_right_);
+  } else {  // Negative = robot rotated left of path
+    heading_within_bounds = (std::abs(heading_error) <= max_heading_error_left_);
+  }
+
+  // Both must be within bounds
+  is_within_bounds_ = position_within_bounds && heading_within_bounds;
 }
 
 BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
@@ -74,7 +99,9 @@ BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
   if (!BT::isStatusActive(status())) {
     initialize();
   }
+
   callback_group_executor_.spin_all(bt_loop_duration_);
+
   if (!is_within_bounds_) {
     RCLCPP_WARN_THROTTLE(
       logger_,
@@ -84,8 +111,10 @@ BT::NodeStatus IsWithinPathTrackingBoundsCondition::tick()
     );
     return BT::NodeStatus::FAILURE;
   }
+
   return BT::NodeStatus::SUCCESS;
 }
+
 }  // namespace nav2_behavior_tree
 
 #include "behaviortree_cpp/bt_factory.h"
